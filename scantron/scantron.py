@@ -6,7 +6,7 @@ def detect_rectangle(contour):
 	# initialize the shape name and approximate the contour
 	peri = cv2.arcLength(contour, True)
 	approx = cv2.approxPolyDP(contour, 0.04 * peri, True)
-	
+
 	# if the shape has 4 vertices, it is either a square or
 	# a rectangle
 	if len(approx) == 4:
@@ -20,7 +20,7 @@ def detect_rectangle(contour):
 		return (True, (x, y, w, h))
 	else:
 		return (False, ())
-	
+
 def find_rectangles(contours, img):
 	rectangles = []
 	# loop through the contours to detect the rectangles
@@ -56,13 +56,13 @@ def determine_char(img, row_height):
 	# character array
 	characters = [' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 	(x, y, w, h) = cv2.boundingRect(img)
-	# Find center of mark	
+	# Find center of mark
 	y = y + (h / 2)
-	
-	# initial row y coordinate
-	row_pos = 0	
 
-	# loop through each row	
+	# initial row y coordinate
+	row_pos = 0
+
+	# loop through each row
 	for row in range(0, 27):
 		if y > row_pos and y < row_pos + row_height:
 			return characters[row]
@@ -121,7 +121,7 @@ x, y, w, h = first_rectangle
 # crop the image to find lower rectangles
 x1 = 0
 x2 = x + 60
-y1 = y - 30 
+y1 = y - 30
 y2 = y + h + 30
 cropped_image = dilated_img[y1:y2, x1:x2]
 
@@ -133,11 +133,16 @@ new_cnts = cv2.findContours(cropped_image.copy(), cv2.RETR_EXTERNAL,
 	cv2.CHAIN_APPROX_SIMPLE)
 new_cnts = imutils.grab_contours(new_cnts)
 
+
 # find lower rectangles
 lower_rectangles = find_rectangles(new_cnts, cropped_norm_image)
 
+cv2.waitKey(10000)
+
 # reverse list to find the first 25 rectangles from the left
 lower_rectangles.reverse()
+
+print("lower_rectanges[0][0]: " + str(lower_rectangles[0]))
 
 # Crop again to find upper rectangles
 x1 = 0
@@ -178,6 +183,10 @@ if debug:
 
 name = ''
 
+cv2.namedWindow("Cropped Norm Image", cv2.WINDOW_NORMAL)
+cv2.imshow("Cropped Norm Image", cropped_norm_image)
+print(str(len(lower_rectangles)))
+
 # Loop through the form's columns and determine the marked characters
 for col in range(1, 26):
 	x1 = lower_rectangles[col][0]
@@ -196,4 +205,3 @@ if debug:
 	while(True):
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			break
-
