@@ -38,7 +38,8 @@ def find_rectangles(contours, img):
 
 		# show the output image
 		if debug:
-			cv2.imshow("Cropped Norm Image", resize_image(img, 20))
+			cv2.namedWindow("Cropped Norm Image", cv2.WINDOW_NORMAL)
+			cv2.imshow("Cropped Norm Image", img)
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			break
 	return rectangles
@@ -85,6 +86,7 @@ ratio = image.shape[0] / float(image.shape[0])
 # and threshold it
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+#thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 3, 5)[1]
 thresh = cv2.threshold(blurred, 90, 255, cv2.THRESH_BINARY_INV)[1]
 #Erode
 element = cv2.getStructuringElement(1, (5,5), (-1, 1))
@@ -120,7 +122,7 @@ x, y, w, h = first_rectangle
 
 # crop the image to find lower rectangles
 x1 = 0
-x2 = x + 60
+x2 = image.shape[1]
 y1 = y - 30
 y2 = y + h + 30
 cropped_image = dilated_img[y1:y2, x1:x2]
@@ -137,16 +139,14 @@ new_cnts = imutils.grab_contours(new_cnts)
 # find lower rectangles
 lower_rectangles = find_rectangles(new_cnts, cropped_norm_image)
 
-cv2.waitKey(10000)
-
 # reverse list to find the first 25 rectangles from the left
-lower_rectangles.reverse()
+lower_rectangles.sort(key = lambda x: x[0])
 
 print("lower_rectanges[0][0]: " + str(lower_rectangles[0]))
 
 # Crop again to find upper rectangles
 x1 = 0
-x2 = lower_rectangles[0][0]
+x2 = lower_rectangles[0][0] + 5
 y1 = 0
 y2 = image.shape[0]
 
@@ -160,16 +160,20 @@ new_cnts = cv2.findContours(cropped_image.copy(), cv2.RETR_EXTERNAL,
 new_cnts = imutils.grab_contours(new_cnts)
 
 upper_rectangles = find_rectangles(new_cnts, cropped_norm_image)
+upper_rectangles.sort(key = lambda x: x[1])
+print("upper_rectangles: " + str(upper_rectangles))
+
+print("Size of upper_rectanges: " + str(len(upper_rectangles)))
 
 # find the difference in y between the bottom two rectangles
 # height of rows
-height_of_row = upper_rectangles[0][1] - upper_rectangles[1][1]
+height_of_row = int((upper_rectangles[1][1] - upper_rectangles[0][1]) / 20)
 
 # Find height of name section
 height_of_form = 27 * height_of_row
 
 # Find bottom y coordinate of form
-bottom_y = upper_rectangles[0][1] + upper_rectangles[0][3]
+bottom_y = upper_rectangles[2][1] + upper_rectangles[2][3]
 
 # Find top y coordinate of form
 top_y = bottom_y - height_of_form
@@ -190,11 +194,13 @@ print(str(len(lower_rectangles)))
 # Loop through the form's columns and determine the marked characters
 for col in range(1, 26):
 	x1 = lower_rectangles[col][0]
-	x2 = lower_rectangles[col][0] + lower_rectangles[col][3]
+	x2 = lower_rectangles[col][0] + lower_rectangles[col][2]
 	y1 = top_y
 	y2 = bottom_y
 	cropped_image = dilated_img[y1:y2, x1:x2]
 	cropped_norm_image = image[y1:y2, x1:x2]
+	cv2.imshow("Cropped Norm Image", cropped_norm_image)
+	cv2.waitKey(0)
 	character = determine_char(cropped_image, height_of_row)
 	name += character
 
