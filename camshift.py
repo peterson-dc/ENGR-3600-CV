@@ -18,7 +18,9 @@ x, y, w, h = 300, 200, 100, 50 # simply hardcoded the values
 track_window = (x, y, w, h)
 
 # set up the ROI for tracking
-roi = cv.selectROI(frame)
+track_window = cv.selectROI(frame)
+x, y, w, h = track_window
+roi = frame[y:y+h, x:x+w]
 hsv_roi =  cv.cvtColor(roi, cv.COLOR_BGR2HSV)
 mask = cv.inRange(hsv_roi, np.array((0., 60.,32.)), np.array((180.,255.,255.)))
 roi_hist = cv.calcHist([hsv_roi],[0],mask,[180],[0,180])
